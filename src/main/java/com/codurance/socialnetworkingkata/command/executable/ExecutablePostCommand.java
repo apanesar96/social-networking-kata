@@ -6,7 +6,7 @@ import com.codurance.socialnetworkingkata.user.UserRepository;
 
 public class ExecutablePostCommand extends ExecutableCommand {
 
-    private static final String POST_SEPARATOR = "->";
+    private static final String POST_SEPARATOR = " -> ";
 
     private final UserRepository userRepository;
 
@@ -17,10 +17,9 @@ public class ExecutablePostCommand extends ExecutableCommand {
     @Override
     public void execute(String requestBody) {
         String[] post = requestBody.split(POST_SEPARATOR);
-        String username = post[0].trim();
-        String message = post[1].trim();
+        String username = post[0];
+        String message = post[1];
 
-        User user = userRepository.get(username);
-        userRepository.updateTimeline(user, message);
+        userRepository.updateTimeline(username, message);
     }
 }

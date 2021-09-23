@@ -21,8 +21,9 @@ public class ExecutableCommandFactory {
 
     public ExecutableCommand create(InputtedCommand inputtedCommand) {
         if (inputtedCommand == POST) return new ExecutablePostCommand(userRepository);
+        if (inputtedCommand == InputtedCommand.READ) return new ExecutableReadCommand(userRepository, console, durationDeterminer);
 
-        return new ExecutableReadCommand(userRepository, console, durationDeterminer);
+        return new ExecutableFollowCommand(userRepository);
     }
 
 }

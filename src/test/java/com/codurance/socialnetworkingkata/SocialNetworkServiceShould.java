@@ -31,13 +31,11 @@ class SocialNetworkServiceShould {
 
     @Test
     void update_user_timeline_with_message_on_submission_of_post_command() {
-        given(console.readInput()).willReturn("posting: Alice -> I love the weather today");
-        User alice = new UserBuilder().createUser();
-        given(userRepository.get("Alice")).willReturn(alice);
+        withConsoleInput("posting: Alice -> I love the weather today");
 
         socialNetworkService.submit();
 
-        verify(userRepository).updateTimeline(alice, "I love the weather today");
+        verify(userRepository).updateTimeline("Alice", "I love the weather today");
     }
 
     @Test
@@ -48,7 +46,7 @@ class SocialNetworkServiceShould {
                 new Post("Damn! We lost!", postTimestamp)
         );
         User bob = new UserBuilder().withTimeline(timeline).createUser();
-        given(console.readInput()).willReturn("reading: Bob");
+        withConsoleInput("reading: Bob");
         given(userRepository.get("Bob")).willReturn(bob);
         given(durationDeterminer.calculateDurationFromNow(postTimestamp)).willReturn("1 minute ago", "2 minutes ago");
 
@@ -57,6 +55,19 @@ class SocialNetworkServiceShould {
         InOrder inOrder = inOrder(console);
         inOrder.verify(console).output("Good game though. (1 minute ago)");
         inOrder.verify(console).output("Damn! We lost! (2 minutes ago)");
+    }
+
+    @Test void
+    follow_requested_user_for_user() {
+        withConsoleInput("following: Charlie follows Bob");
+
+        socialNetworkService.submit();
+
+        verify(userRepository).followUser("Charlie", "Bob");
+    }
+
+    private void withConsoleInput(String input) {
+        given(console.readInput()).willReturn(input);
     }
 
 }
