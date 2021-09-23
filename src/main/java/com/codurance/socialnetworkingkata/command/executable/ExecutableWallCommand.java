@@ -1,10 +1,11 @@
 package com.codurance.socialnetworkingkata.command.executable;
 
 import com.codurance.socialnetworkingkata.io.Console;
-import com.codurance.socialnetworkingkata.time.DurationDeterminer;
+import com.codurance.socialnetworkingkata.time.TimestampProvider;
 import com.codurance.socialnetworkingkata.user.Post;
 import com.codurance.socialnetworkingkata.user.User;
 import com.codurance.socialnetworkingkata.user.UserRepository;
+import org.ocpsoft.prettytime.PrettyTime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,12 +17,12 @@ public class ExecutableWallCommand extends ExecutableCommand {
     private static final String WALL_SEPARATOR = " wall";
 
     private final UserRepository userRepository;
-    private DurationDeterminer durationDeterminer;
-    private Console console;
+    private final TimestampProvider timestampProvider;
+    private final Console console;
 
-    public ExecutableWallCommand(UserRepository userRepository, DurationDeterminer durationDeterminer, Console console) {
+    public ExecutableWallCommand(UserRepository userRepository, TimestampProvider timestampProvider, Console console) {
         this.userRepository = userRepository;
-        this.durationDeterminer = durationDeterminer;
+        this.timestampProvider = timestampProvider;
         this.console = console;
     }
 
@@ -46,8 +47,9 @@ public class ExecutableWallCommand extends ExecutableCommand {
     }
 
     private void outputUserPosts(User user) {
-        for (Post post: user.timeline) {
-            String duration = durationDeterminer.calculateDurationFromNow(post.postedOn);
+        for (Post post : user.timeline) {
+            PrettyTime prettyTime = new PrettyTime(timestampProvider.now());
+            String duration = prettyTime.format(post.postedOn);
             String output = format("%s - %s (%s)", user.username, post.message, duration);
             console.output(output);
         }

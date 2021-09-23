@@ -4,7 +4,7 @@ import static java.lang.String.format;
 
 public class InputableCommandMapper {
 
-    public InputtedCommand map(String command) { //"posting"
+    public InputtedCommand map(String command) {
         InputtedCommand[] availableInputtedCommands = InputtedCommand.values();
         for (InputtedCommand inputtedCommand : availableInputtedCommands) {
             if (inputtedCommand.name.equals(command)) return inputtedCommand;

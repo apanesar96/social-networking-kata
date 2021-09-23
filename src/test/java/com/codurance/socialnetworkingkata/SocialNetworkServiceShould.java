@@ -3,7 +3,7 @@ package com.codurance.socialnetworkingkata;
 import com.codurance.socialnetworkingkata.command.executable.ExecutableCommandFactory;
 import com.codurance.socialnetworkingkata.command.input.InputableCommandMapper;
 import com.codurance.socialnetworkingkata.io.Console;
-import com.codurance.socialnetworkingkata.time.DurationDeterminer;
+import com.codurance.socialnetworkingkata.time.TimestampProvider;
 import com.codurance.socialnetworkingkata.user.Post;
 import com.codurance.socialnetworkingkata.user.User;
 import com.codurance.socialnetworkingkata.user.User.UserBuilder;
@@ -12,10 +12,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import static java.time.ZoneOffset.UTC;
 import static java.util.List.of;
-import static java.util.stream.Collectors.toList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -23,11 +24,13 @@ import static org.mockito.Mockito.verify;
 
 class SocialNetworkServiceShould {
 
+    private final Instant NOW = toInstant("2021-09-23T10:15:00");
+
     private final Console console = mock(Console.class);
     private final InputableCommandMapper inputableCommandMapper = new InputableCommandMapper();
     private final UserRepository userRepository = mock(UserRepository.class);
-    private final DurationDeterminer durationDeterminer = mock(DurationDeterminer.class);
-    private final ExecutableCommandFactory executableCommandFactory = new ExecutableCommandFactory(userRepository, console, durationDeterminer);
+    private final TimestampProvider timestampProvider = mock(TimestampProvider.class);
+    private final ExecutableCommandFactory executableCommandFactory = new ExecutableCommandFactory(userRepository, timestampProvider, console);
 
     private final SocialNetworkService socialNetworkService = new SocialNetworkService(console, inputableCommandMapper, executableCommandFactory);
 
@@ -42,11 +45,10 @@ class SocialNetworkServiceShould {
 
     @Test
     void output_user_timeline_on_submission_of_read_command() {
-        Instant postTimestamp = Instant.now();
-        User bob = withTimelinePosts(of("Good game though.", "Damn! We lost!"), postTimestamp).createUser();
+        User bob = createUserBob();
         withConsoleInput("reading: Bob");
         given(userRepository.get("Bob")).willReturn(bob);
-        given(durationDeterminer.calculateDurationFromNow(postTimestamp)).willReturn("1 minute ago", "2 minutes ago");
+        given(timestampProvider.now()).willReturn(NOW);
 
         socialNetworkService.submit();
 
@@ -66,21 +68,17 @@ class SocialNetworkServiceShould {
 
     @Test
     void output_user_wall() {
-        Instant postTimestamp = Instant.now();
-        User bob = withTimelinePosts(of("Good game though.", "Damn! We lost!"), postTimestamp).withUsername("Bob").createUser();
-        User alice = withTimelinePosts(of("I love the weather today"), postTimestamp).withUsername("Alice").createUser();
-        User charlie = withTimelinePosts(of("I'm in New York today! Anyone wants to have a coffee?"), postTimestamp)
-                .withUsername("Charlie")
-                .withFollowing(of(bob, alice))
-                .createUser();
+        User bob = createUserBob();
+        User alice = createAliceUser();
+        User charlie = createCharlieUser(of(bob, alice));
         withConsoleInput("wall: Charlie wall");
         given(userRepository.get("Charlie")).willReturn(charlie);
-        given(durationDeterminer.calculateDurationFromNow(postTimestamp)).willReturn("15 seconds ago", "1 minute ago", "2 minutes ago", "5 minutes ago");
+        given(timestampProvider.now()).willReturn(NOW);
 
         socialNetworkService.submit();
 
         InOrder inOrder = inOrder(console);
-        inOrder.verify(console).output("Charlie - I'm in New York today! Anyone wants to have a coffee? (15 seconds ago)");
+        inOrder.verify(console).output("Charlie - I'm in New York today! Anyone wants to have a coffee? (moments ago)");
         inOrder.verify(console).output("Bob - Good game though. (1 minute ago)");
         inOrder.verify(console).output("Bob - Damn! We lost! (2 minutes ago)");
         inOrder.verify(console).output("Alice - I love the weather today (5 minutes ago)");
@@ -90,10 +88,42 @@ class SocialNetworkServiceShould {
         given(console.readInput()).willReturn(input);
     }
 
-    public UserBuilder withTimelinePosts(List<String> messages, Instant timestamp) {
-        List<Post> timeline = messages.stream().map(message -> new Post(message, timestamp)).collect(toList());
+    private User createUserBob() {
+        List<Post> posts = of(
+                withPost("Good game though.", "2021-09-23T10:14:00"),
+                withPost("Damn! We lost!", "2021-09-23T10:13:00")
 
-        return new UserBuilder().withTimeline(timeline);
+        );
+
+        return new UserBuilder().withUsername("Bob").withTimeline(posts).createUser();
+    }
+
+    private User createAliceUser() {
+        List<Post> posts = of(
+                withPost("I love the weather today", "2021-09-23T10:10:00")
+
+        );
+
+        return new UserBuilder().withUsername("Alice").withTimeline(posts).createUser();
+    }
+
+    private User createCharlieUser(List<User> following) {
+        List<Post> posts = of(
+                withPost("I'm in New York today! Anyone wants to have a coffee?", "2021-09-23T10:14:45")
+
+        );
+
+        return new UserBuilder().withUsername("Charlie").withTimeline(posts).withFollowing(following).createUser();
+    }
+
+    public Post withPost(String message, String dateTime) {
+        Instant timestamp = toInstant(dateTime);
+        return new Post(message, timestamp);
+    }
+
+    private Instant toInstant(String dateTime) {
+        LocalDateTime parsedDateTime = LocalDateTime.parse(dateTime);
+        return parsedDateTime.toInstant(UTC);
     }
 
 }
