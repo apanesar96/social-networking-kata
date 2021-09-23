@@ -1,4 +1,6 @@
-package com.codurance.socialnetworkingkata.command;
+package com.codurance.socialnetworkingkata.user;
+
+import com.codurance.socialnetworkingkata.user.User;
 
 public interface UserRepository {
 

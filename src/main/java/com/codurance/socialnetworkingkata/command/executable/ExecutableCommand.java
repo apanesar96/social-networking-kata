@@ -1,4 +1,4 @@
-package com.codurance.socialnetworkingkata.command;
+package com.codurance.socialnetworkingkata.command.executable;
 
 public abstract class ExecutableCommand {
 

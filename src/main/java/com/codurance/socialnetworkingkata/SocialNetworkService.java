@@ -1,7 +1,7 @@
 package com.codurance.socialnetworkingkata;
 
-import com.codurance.socialnetworkingkata.command.ExecutableCommand;
-import com.codurance.socialnetworkingkata.command.ExecutableCommandFactory;
+import com.codurance.socialnetworkingkata.command.executable.ExecutableCommand;
+import com.codurance.socialnetworkingkata.command.executable.ExecutableCommandFactory;
 import com.codurance.socialnetworkingkata.command.input.InputtedCommand;
 import com.codurance.socialnetworkingkata.command.input.InputableCommandMapper;
 
@@ -27,7 +27,7 @@ public class SocialNetworkService {
         InputtedCommand inputtedCommand = inputableCommandMapper.map(command);
 
         ExecutableCommand executableCommand = executableCommandFactory.create(inputtedCommand);
-        String requestBody = request[1];
+        String requestBody = request[1].trim();
         executableCommand.execute(requestBody);
     }
 }

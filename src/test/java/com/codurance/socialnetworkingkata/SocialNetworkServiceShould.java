@@ -1,16 +1,21 @@
 package com.codurance.socialnetworkingkata;
 
-import com.codurance.socialnetworkingkata.command.ExecutableCommand;
-import com.codurance.socialnetworkingkata.command.ExecutableCommandFactory;
-import com.codurance.socialnetworkingkata.command.input.InputtedCommand;
+import com.codurance.socialnetworkingkata.command.executable.ExecutableCommandFactory;
 import com.codurance.socialnetworkingkata.command.input.InputableCommandMapper;
+import com.codurance.socialnetworkingkata.user.Post;
+import com.codurance.socialnetworkingkata.user.User;
+import com.codurance.socialnetworkingkata.user.User.UserBuilder;
+import com.codurance.socialnetworkingkata.user.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
+import java.util.List;
+
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -19,23 +24,52 @@ class SocialNetworkServiceShould {
 	@Mock
 	private Console console;
 
-	@Mock
 	private InputableCommandMapper inputableCommandMapper;
 
-	@Mock
 	private ExecutableCommandFactory executableCommandFactory;
 
+	@Mock
+	private UserRepository userRepository;
+
+	@Mock
+	private DurationDeterminer durationDeterminer;
+
+	private SocialNetworkService socialNetworkService;
+
+
+	@BeforeEach
+	void setUp() {
+		inputableCommandMapper = new InputableCommandMapper();
+		executableCommandFactory = new ExecutableCommandFactory(userRepository, console, durationDeterminer);
+		socialNetworkService = new SocialNetworkService(console, inputableCommandMapper, executableCommandFactory);
+	}
+
 	@Test
-	void submit_command() {
-		SocialNetworkService socialNetworkService = new SocialNetworkService(console, inputableCommandMapper, executableCommandFactory);
-		InputtedCommand inputtedCommand = mock(InputtedCommand.class);
-		ExecutableCommand executableCommand = mock(ExecutableCommand.class);
-		given(console.readInput()).willReturn("command: request from user");
-		given(inputableCommandMapper.map("command")).willReturn(inputtedCommand);
-		given(executableCommandFactory.create(inputtedCommand)).willReturn(executableCommand);
+	void update_user_timeline_with_message_on_submission_of_post_command() {
+		given(console.readInput()).willReturn("posting: Alice -> I love the weather today");
+		User alice = new UserBuilder().createUser();
+		given(userRepository.get("Alice")).willReturn(alice);
 
 		socialNetworkService.submit();
 
-		verify(executableCommand).execute("request from user");
+		verify(userRepository).updateTimeline(alice, "I love the weather today");
+	}
+
+	@Test
+	void output_user_timeline_on_submission_of_read_command() {
+		Instant postTimestamp = Instant.now();
+		List<Post> timeline = List.of(
+				new Post("Good game though.", postTimestamp),
+				new Post("Damn! We lost!", postTimestamp)
+		);
+		User bob = new UserBuilder().withTimeline(timeline).createUser();
+		given(console.readInput()).willReturn("reading: Bob");
+		given(userRepository.get("Bob")).willReturn(bob);
+		given(durationDeterminer.calculateDurationFromNow(postTimestamp)).willReturn("1 minute ago", "2 minutes ago");
+
+		socialNetworkService.submit();
+
+		verify(console).output("Good game though. (1 minute ago)");
+		verify(console).output("Damn! We lost! (2 minutes ago)");
 	}
 }
