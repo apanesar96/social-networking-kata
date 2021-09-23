@@ -3,6 +3,7 @@ package com.codurance.socialnetworkingkata.user;
 import java.util.List;
 
 public class User {
+
     public final List<Post> timeline;
 
     private User(List<Post> timeline) {
@@ -10,6 +11,7 @@ public class User {
     }
 
     public static class UserBuilder {
+
         private List<Post> timeline;
 
         public UserBuilder withTimeline(List<Post> timeline) {
@@ -20,7 +22,9 @@ public class User {
         public User createUser() {
             return new User(timeline);
         }
+
     }
+
 }
 
 

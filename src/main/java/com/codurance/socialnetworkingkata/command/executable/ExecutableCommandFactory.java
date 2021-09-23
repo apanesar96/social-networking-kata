@@ -1,7 +1,7 @@
 package com.codurance.socialnetworkingkata.command.executable;
 
-import com.codurance.socialnetworkingkata.Console;
-import com.codurance.socialnetworkingkata.DurationDeterminer;
+import com.codurance.socialnetworkingkata.io.Console;
+import com.codurance.socialnetworkingkata.time.DurationDeterminer;
 import com.codurance.socialnetworkingkata.command.input.InputtedCommand;
 import com.codurance.socialnetworkingkata.user.UserRepository;
 

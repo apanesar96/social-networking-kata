@@ -4,6 +4,7 @@ import com.codurance.socialnetworkingkata.command.executable.ExecutableCommand;
 import com.codurance.socialnetworkingkata.command.executable.ExecutableCommandFactory;
 import com.codurance.socialnetworkingkata.command.input.InputtedCommand;
 import com.codurance.socialnetworkingkata.command.input.InputableCommandMapper;
+import com.codurance.socialnetworkingkata.io.Console;
 
 public class SocialNetworkService {
 
