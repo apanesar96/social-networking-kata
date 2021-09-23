@@ -1,4 +1,4 @@
-package com.codurance.socialnetworkingkata;
+package com.codurance.socialnetworkingkata.io;
 
 public interface Console {
     String readInput();
