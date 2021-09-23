@@ -14,6 +14,8 @@ import org.mockito.InOrder;
 import java.time.Instant;
 import java.util.List;
 
+import static java.util.List.of;
+import static java.util.stream.Collectors.toList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -41,11 +43,7 @@ class SocialNetworkServiceShould {
     @Test
     void output_user_timeline_on_submission_of_read_command() {
         Instant postTimestamp = Instant.now();
-        List<Post> timeline = List.of(
-                new Post("Good game though.", postTimestamp),
-                new Post("Damn! We lost!", postTimestamp)
-        );
-        User bob = new UserBuilder().withTimeline(timeline).createUser();
+        User bob = withTimelinePosts(of("Good game though.", "Damn! We lost!"), postTimestamp).createUser();
         withConsoleInput("reading: Bob");
         given(userRepository.get("Bob")).willReturn(bob);
         given(durationDeterminer.calculateDurationFromNow(postTimestamp)).willReturn("1 minute ago", "2 minutes ago");
@@ -66,8 +64,36 @@ class SocialNetworkServiceShould {
         verify(userRepository).followUser("Charlie", "Bob");
     }
 
+    @Test
+    void output_user_wall() {
+        Instant postTimestamp = Instant.now();
+        User bob = withTimelinePosts(of("Good game though.", "Damn! We lost!"), postTimestamp).withUsername("Bob").createUser();
+        User alice = withTimelinePosts(of("I love the weather today"), postTimestamp).withUsername("Alice").createUser();
+        User charlie = withTimelinePosts(of("I'm in New York today! Anyone wants to have a coffee?"), postTimestamp)
+                .withUsername("Charlie")
+                .withFollowing(of(bob, alice))
+                .createUser();
+        withConsoleInput("wall: Charlie wall");
+        given(userRepository.get("Charlie")).willReturn(charlie);
+        given(durationDeterminer.calculateDurationFromNow(postTimestamp)).willReturn("15 seconds ago", "1 minute ago", "2 minutes ago", "5 minutes ago");
+
+        socialNetworkService.submit();
+
+        InOrder inOrder = inOrder(console);
+        inOrder.verify(console).output("Charlie - I'm in New York today! Anyone wants to have a coffee? (15 seconds ago)");
+        inOrder.verify(console).output("Bob - Good game though. (1 minute ago)");
+        inOrder.verify(console).output("Bob - Damn! We lost! (2 minutes ago)");
+        inOrder.verify(console).output("Alice - I love the weather today (5 minutes ago)");
+    }
+
     private void withConsoleInput(String input) {
         given(console.readInput()).willReturn(input);
+    }
+
+    public UserBuilder withTimelinePosts(List<String> messages, Instant timestamp) {
+        List<Post> timeline = messages.stream().map(message -> new Post(message, timestamp)).collect(toList());
+
+        return new UserBuilder().withTimeline(timeline);
     }
 
 }
