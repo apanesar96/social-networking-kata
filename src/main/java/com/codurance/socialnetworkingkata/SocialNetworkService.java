@@ -8,7 +8,7 @@ import com.codurance.socialnetworkingkata.io.Console;
 
 public class SocialNetworkService {
 
-    private static final String REQUEST_SEPARATOR = ":";
+    private static final String REQUEST_SEPARATOR = ": ";
 
     private final Console console;
     private final InputableCommandMapper inputableCommandMapper;
@@ -28,7 +28,7 @@ public class SocialNetworkService {
         InputtedCommand inputtedCommand = inputableCommandMapper.map(command);
 
         ExecutableCommand executableCommand = executableCommandFactory.create(inputtedCommand);
-        String requestBody = request[1].trim();
+        String requestBody = request[1];
         executableCommand.execute(requestBody);
     }
 
