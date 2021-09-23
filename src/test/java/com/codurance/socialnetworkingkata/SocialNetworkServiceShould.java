@@ -84,6 +84,11 @@ class SocialNetworkServiceShould {
         inOrder.verify(console).output("Alice - I love the weather today (5 minutes ago)");
     }
 
+    private Instant toInstant(String dateTime) {
+        LocalDateTime parsedDateTime = LocalDateTime.parse(dateTime);
+        return parsedDateTime.toInstant(UTC);
+    }
+
     private void withConsoleInput(String input) {
         given(console.readInput()).willReturn(input);
     }
@@ -119,11 +124,6 @@ class SocialNetworkServiceShould {
     public Post withPost(String message, String dateTime) {
         Instant timestamp = toInstant(dateTime);
         return new Post(message, timestamp);
-    }
-
-    private Instant toInstant(String dateTime) {
-        LocalDateTime parsedDateTime = LocalDateTime.parse(dateTime);
-        return parsedDateTime.toInstant(UTC);
     }
 
 }
